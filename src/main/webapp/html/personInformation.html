@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>个人中心</title>
+  <link rel="stylesheet" href="../bootstrap-3.3.7-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/page.css">
+  <script src="../bootstrap-3.3.7-dist/js/jquery-3.2.1.min.js"></script>
+  <script src="../bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+  <script src="../js/update_information.js"></script>
+  <script type="text/javascript">
+    window.onload=function() {
+      /*
+      隐藏图片框
+      */
+      $("#picture").hide();
+      /*
+      判断是否登录
+      */
+      $.post("http://localhost/checkLoginServlet","",function (data){
+        if(data.account != "0"){
+          $("#register").hide();
+          $("#login").hide();
+          document.getElementById("picture").src = data.avatar;
+          document.getElementById("person_picture").src = data.avatar;
+          document.getElementById("blog_my_picture").src = data.avatar;
+          document.getElementById("blog_my_name").innerHTML = data.name;
+          document.getElementById("blog_my_account").innerHTML = data.account;
+          document.getElementById("blog_my_sex").innerHTML = data.sex;
+          document.getElementById("blog_my_birthday").innerHTML = data.birthday;
+          $("#picture").show();
+        } else {
+          location.href = "homepage.html";
+        }
+      },'json');
+      /*
+      退出功能，主要是删除记录了判断是否登录的cookie
+      */
+      document.getElementById("close").onclick = function (){
+        $.post("http://localhost/closeLoginServlet", "" ,function (data) {
+          window.location.href = "homepage.html";
+        },'json');
+      }
+      /*
+      首先展示我的博客管理
+      */
+      $("#blog_manage").hide();
+      $("#person_information").hide();
+      $("#head_picture").hide();
+      $("#update_password").hide();
+      $("#blog_my").show();
+
+      // 页面打开，先进行导入
+      pageInformation();
+
+      // 记录博客的编号
+      var numberBlogOne;
+      var numberBlogTwo;
+      var numberBlogThree;
+
+      // 删除博文操作，删除后刷新页面
+      document.getElementById("one_three").onclick = function () {
+        $.post("http://localhost/deleteBlogServlet",{numberBlog:numberBlogOne},function (data) {
+          var flag = data.flag;
+          pageInformation();
+        },'json');
+      }
+      document.getElementById("two_three").onclick = function () {
+        $.post("http://localhost/deleteBlogServlet",{numberBlog:numberBlogTwo},function (data) {
+          var flag = data.flag;
+          pageInformation();
+        },'json');
+      }
+      document.getElementById("three_three").onclick = function () {
+        $.post("http://localhost/deleteBlogServlet",{numberBlog:numberBlogThree},function (data) {
+          var flag = data.flag;
+          pageInformation();
+        },'json');
+      }
+      // 所有对博客的操作按钮隐藏,等到判断有多少篇博客再打开
+      $("#one_one").hide();
+      $("#one_two").hide();
+      $("#one_three").hide();
+      $("#two_one").hide();
+      $("#two_two").hide();
+      $("#two_three").hide();
+      $("#three_one").hide();
+      $("#three_two").hide();
+      $("#three_three").hide();
+      /*
+      因为编辑博客套用发布博客的div，所以要隐藏
+      */
+      $("#return").hide();
+      $("#blog_submit").hide();
+      /*
+      编辑博客事件
+      */
+      document.getElementById("one_two").onclick = function () {
+        $("#blog_my").hide();
+        $("#blog_manage").show();
+        $("#reset").hide();
+        $("#blog_submit").hide();
+        $("#blog_update_submit").show();
+        $("#return").show();
+        novel(numberBlogOne);
+      }
+      document.getElementById("two_two").onclick = function () {
+        $("#blog_my").hide();
+        $("#blog_manage").show();
+        $("#reset").hide();
+        $("#blog_submit").hide();
+        $("#blog_update_submit").show();
+        $("#return").show();
+        novel(numberBlogTwo);
+      }
+      document.getElementById("three_two").onclick = function () {
+        $("#blog_my").hide();
+        $("#blog_manage").show();
+        $("#reset").hide();
+        $("#blog_submit").hide();
+        $("#blog_update_submit").show();
+        $("#return").show();
+        $.post("http://localhost/blogNovelServlet",{numberBlog:numberBlogThree},function (data) {
+        },'json');
+        novel(numberBlogThree);
+      }
+      // 将一个编号放置在博客中，也就是要保存博客的编号，用来在后面判断要导入哪一篇博客的信息
+      var numberBlogCookie;
+      // 保存按钮
+      document.getElementById("blog_update_submit").onclick = function () {
+        var title = novel_name_test();
+        var novel = novel_test();
+        var label = label_test();
+        if( title && novel && label){
+          $.post("/numberBlogServlet",{numberBlog:numberBlogCookie},function (data) {
+            var flag = data.flag;
+            $.post("/updateBlogServlet",$("#create_blog").serialize(),function (data) {
+              /*返回0，说明博文的名字有重叠，要有提示
+              返回1，说明创建成功，也要有提示，然后清空表单内容*/
+              if(data.flag == "0"){
+                document.getElementById("title_name_error").innerHTML = "名字已占用！";
+              } else {
+                document.getElementById("title_name_error").innerHTML = "";
+                alert("修改成功！");
+              }
+            },'json');
+          });
+        }
+      }
+      // 查看网页
+      document.getElementById("one_one").onclick = function () {
+        var url = "blog.html?numberBlog="+numberBlogOne;
+        location.href = url;
+      }
+      document.getElementById("two_one").onclick = function () {
+        var url = "blog.html?numberBlog="+numberBlogTwo;
+        location.href = url;
+      }
+      document.getElementById("three_one").onclick = function () {
+        var url = "blog.html?numberBlog="+numberBlogThree;
+        location.href = url;
+      }
+      // 导入数据到表单的方法
+      function novel(number){
+        numberBlogCookie = number;
+        $.post("http://localhost/blogNovelServlet",{numberBlog:number},function (data) {
+          document.getElementById("title").value = data.title;
+          document.getElementById("novel").value = data.novel;
+          document.getElementById("label_one").value = data.oneType;
+          document.getElementById("label_two").value = data.twoType;
+          document.getElementById("label_three").value = data.threeType;
+          if(data.category + "" == "游戏"){
+            document.getElementById("game").checked = true;
+          } else if(data.category + "" == "运动") {
+            document.getElementById("sport").checked = true;
+          } else if(data.category + "" == "科技") {
+            document.getElementById("science").checked = true;
+          } else if(data.category + "" == "休闲") {
+            document.getElementById("free").checked = true;
+          } else if(data.category + "" == "生活") {
+            document.getElementById("life").checked = true;
+          }
+        },'json');
+      }
+      // 返回键
+      document.getElementById("return").onclick = function () {
+        $("#blog_manage").hide();
+        $("#blog_my").show();
+        $("#reset").show();
+        $("#return").hide();
+      }
+      // 页面信息接收的方法
+      function pageInformation() {
+        // 不需要发送任何东西给服务器，想要发送的东西自然会有服务器存在cookie中
+        $.post("http://localhost/blogPageServlet","",function (data) {
+          // 获取此次返回的第一条信息的序数和总信息条数，解决了页面显示信息的条数
+          var informationNumber = data[0].informationNumber;
+          var informationAllNumber = data[0].informationAllNumber;
+          // 记录编号
+          if(informationAllNumber - informationNumber >= 0){
+            numberBlogOne = data[0].numberBlog;
+            if(informationAllNumber - informationNumber >= 1){
+              numberBlogTwo = data[1].numberBlog;
+              if(informationAllNumber - informationNumber >= 2){
+                numberBlogThree = data[2].numberBlog;
+              }
+            }
+          }
+          // 根据信息条数，禁用上下页的按钮
+          if(informationAllNumber - informationNumber <= 2){
+            $("#next").attr("disabled",'disabled');
+          } else {
+            $("#next").removeAttr("disabled");
+          }
+          if(informationNumber <=3) {
+            $("#previous").attr("disabled",'disabled');
+          } else {
+            $("#previous").removeAttr("disabled");
+          }
+
+          var flag = 2;
+          if(informationAllNumber-informationNumber>=2){}
+          else {
+            flag = informationAllNumber-informationNumber;
+          }
+          // 可以根据命名方式减少写入表格的代码
+          // 有则写入，但是没有也需要消除
+          for(var i=0; i<=flag; i++){
+            var flagNumber;
+            if(i==0){
+              flagNumber = "one";
+            } else if(i==1) {
+              flagNumber = "two";
+            } else {
+              flagNumber = "three";
+            }
+            document.getElementById(flagNumber+"_number").innerHTML = data[i].number;
+            document.getElementById(flagNumber+"_number_blog").innerHTML = data[i].numberBlog;
+            document.getElementById(flagNumber+"_title").innerHTML = data[i].title;
+            document.getElementById(flagNumber+"_time").innerHTML = data[i].time.substring(0, 19);
+            document.getElementById(flagNumber+"_category").innerHTML = data[i].category;
+            document.getElementById(flagNumber+"_one_type").innerHTML = data[i].oneType;
+            document.getElementById(flagNumber+"_two_type").innerHTML = data[i].twoType;
+            document.getElementById(flagNumber+"_three_type").innerHTML = data[i].threeType;
+            $("#"+flagNumber+"_one").show();
+            $("#"+flagNumber+"_two").show();
+            $("#"+flagNumber+"_three").show();
+          }
+          for(var i = 2;i > flag;i--){
+            var flagNumber;
+            if(i==0){
+              flagNumber = "one";
+            } else if(i==1) {
+              flagNumber = "two";
+            } else {
+              flagNumber = "three";
+            }
+            document.getElementById(flagNumber+"_number").innerHTML = "";
+            document.getElementById(flagNumber+"_number_blog").innerHTML = "";
+            document.getElementById(flagNumber+"_title").innerHTML = "";
+            document.getElementById(flagNumber+"_time").innerHTML = "";
+            document.getElementById(flagNumber+"_category").innerHTML = "";
+            document.getElementById(flagNumber+"_one_type").innerHTML = "";
+            document.getElementById(flagNumber+"_two_type").innerHTML = "";
+            document.getElementById(flagNumber+"_three_type").innerHTML = "";
+            $("#"+flagNumber+"_one").hide();
+            $("#"+flagNumber+"_two").hide();
+            $("#"+flagNumber+"_three").hide();
+          }
+        },'json');
+      }
+      // 下一页按钮事件：先进行页面加一，然后再进行信息接收，如果将两个访问只是书写先后，会同时进行访问，毕竟异步
+      document.getElementById("next").onclick = function (){
+        $.post("http://localhost/blogPageChangeServlet",{flag:1},function (data) {
+          var flag = data.flag;
+          pageInformation();
+        },'json');
+      }
+      // 上一页
+      document.getElementById("previous").onclick = function (){
+        $.post("http://localhost/blogPageChangeServlet",{flag:0},function (data) {
+          var flag = data.flag;
+          pageInformation();
+        },'json');
+      }
+      /*
+      点击事件，导入数据到我的博客页面上
+      */
+      document.getElementById("myBlog").onclick = function (){
+        // 发送两个请求，一个是关于用户的信息，一个是关于分页的，前者只需要访问检测是否已经登录的服务器即可
+        $.post("http://localhost/checkLoginServlet","",function (data) {
+          document.getElementById("blog_my_picture").src = data.avatar;
+          document.getElementById("blog_my_name").innerHTML = data.name;
+          document.getElementById("blog_my_account").innerHTML = data.account;
+          document.getElementById("blog_my_sex").innerHTML = data.sex;
+          document.getElementById("blog_my_birthday").innerHTML = data.birthday;
+        },'json');
+        pageInformation();
+        $("#blog_manage").hide();
+        $("#person_information").hide();
+        $("#head_picture").hide();
+        $("#update_password").hide();
+        $("#blog_my").show();
+      }
+      /*
+      发布博客
+      */
+      document.getElementById("blog").onclick = function (){
+        $("#blog_my").hide();
+        $("#person_information").hide();
+        $("#head_picture").hide();
+        $("#update_password").hide();
+        $("#return").hide();
+        $("#blog_update_submit").hide();
+        $("#blog_manage").show();
+        $("#reset").show();
+        $("#blog_submit").show();
+        document.getElementById("title").value = "";
+        document.getElementById("novel").value = "";
+        document.getElementById("label_one").value = "";
+        document.getElementById("label_two").value = "";
+        document.getElementById("label_three").value = "";
+        document.getElementById("game").checked = true;
+      }
+      /*
+      更新个人信息
+      */
+      document.getElementById("update").onclick = function (){
+        $("#blog_manage").hide();
+        $("#blog_my").hide();
+        $("#person_information").hide();
+        $("#head_picture").hide();
+        $("#update_password").show();
+      }
+      /*
+      修改头像
+      */
+      document.getElementById("head").onclick = function (){
+        $("#blog_manage").hide();
+        $("#blog_my").hide();
+        $("#person_information").hide();
+        $("#update_password").hide();
+        $("#head_picture").show();
+      }
+      /*
+      个人信息
+      */
+      document.getElementById("information").onclick = function (){
+        $.post("http://localhost/checkLoginServlet","",function (data){
+          document.getElementById("person_name").value = data.name;
+          document.getElementById("person_account").value = data.account;
+          document.getElementById("person_birthday").value = data.birthday;
+          if(data.sex+"" == "男"){
+            document.getElementById("person_sex_man").checked = true;
+          } else if(data.sex+"" == "女") {
+            document.getElementById("person_sex_woman").checked = true;
+          }
+        },'json');
+        document.getElementById("person_name_error").innerHTML = "";
+        document.getElementById("person_account_error").innerHTML = "";
+        document.getElementById("person_birthday_error").innerHTML = "";
+        $("#blog_manage").hide();
+        $("#head_picture").hide();
+        $("#blog_my").hide();
+        $("#update_password").hide();
+        $("#person_information").show();
+      }
+      /*
+      个人信息保存事件
+      */
+      document.getElementById("person_submit").onclick = function (){
+        var name = name_test();
+        var birthday = birthday_test();
+        if(name && birthday){
+          $.post("http://localhost/updateAccountServlet", $("#person-form").serialize(), function (data) {
+            if(data.flag == "0"){
+              document.getElementById("person_name_error").innerHTML = "已被占用！";
+            } else {
+              document.getElementById("person_name_error").innerHTML = "";
+              alert("保存成功！");
+            }
+          },'json');
+        }
+      }
+      /*
+      修改密码点击事件，判断是否符合要求
+      */
+      document.getElementById("end_password_submit").onclick = function () {
+        var startPassword = start_password_test();
+        var endPassword = end_password_test();
+        var confirmPassword = confirm_test();
+        if(startPassword && endPassword && confirmPassword){
+          $.post("http://localhost/updatePasswordServlet", $("#person_confirm_password").serialize(), function (data) {
+            if(data.flag == "0"){
+              document.getElementById("start_password_error").innerHTML = "密码错误！";
+            } else {
+              document.getElementById("start_password_error").innerHTML = "";
+              alert("保存成功！");
+              document.getElementById("start_password").value = "";
+              document.getElementById("end_password").value = "";
+              document.getElementById("confirm_password").value = "";
+            }
+          },'json');
+        }
+      }
+      /*
+      图片提交，发送数据给服务器
+      主要难点是不知道应该发送什么类型的数据给服务器
+      下面的数据包是看了别人写的数据包仿造的
+      就是下面这个,出处找不到了，但是，看到有几个博客都是这么写
+      var formData = new FormData();
+      formData.append("file",$("#file")[0].files[0]);
+      */
+      document.getElementById("picture_submit").onclick = function () {
+        var formData = new FormData();
+        formData.append("file",$("#file")[0].files[0]);
+        $.ajax({
+          url:"http://localhost/updatePictureServlet",
+          type:"post",
+          data:formData,
+          processData:false,
+          contentType:false,
+          dataType:'json',
+          success:function (data) {
+            document.getElementById("picture").src = data.path+"";
+            document.getElementById("person_picture").src = data.path+"";
+          },
+          error:function (data) {
+
+          }
+        });
+      }
+      /*
+      发布博客提交验证
+      */
+      document.getElementById("blog_submit").onclick = function () {
+        var title = novel_name_test();
+        var novel = novel_test();
+        var label = label_test();
+        if( title && novel && label){
+          $.post("/blogServlet",$("#create_blog").serialize(),function (data) {
+            /*返回0，说明博文的名字有重叠，要有提示
+            返回1，说明创建成功，也要有提示，然后清空表单内容*/
+            if(data.flag == "0"){
+              document.getElementById("title_name_error").innerHTML = "名字已占用！";
+            } else {
+              document.getElementById("title_name_error").innerHTML = "";
+              alert("发布成功！");
+              document.getElementById("title").value = "";
+              document.getElementById("novel").value = "";
+              document.getElementById("label_one").value = "";
+              document.getElementById("label_two").value = "";
+              document.getElementById("label_three").value = "";
+            }
+          },'json');
+        }
+      }
+    };
+  </script>
+  <style>
+    /*文件选择框的按钮样式*/
+    /*来源：https://www.cnblogs.com/hdd1223/p/5653683.html*/
+    .file {
+      position: relative;
+      display: inline-block;
+      background: #55C4F2;
+      border:none;
+      border-radius: 4px;
+      padding: 4px 12px;
+      overflow: hidden;
+      color: #1E88C7;
+      text-decoration: none;
+      text-indent: 0;
+      line-height: 20px;
+    }
+    .file .upfile {
+      position: absolute;
+      font-size: 100px;
+      right: 0;
+      top: 0;
+      opacity: 0;
+    }
+    #upfile{
+      color: #ffffff;
+      background: #55C4F2;
+      border: none;
+    }
+    #upfile:hover{
+      background: #AADFFD;
+    }
+
+    /*下面是自己写的部分*/
+    .error{
+      color: red;
+    }
+    /*设置行高*/
+    .tr_height{
+      height: 60px;
+    }
+    /*设置每一个格子的宽度*/
+    .title{
+      width: 180px;
+    }
+    .type{
+      width: 70px;
+    }
+    .use{
+      width: 120px;
+    }
+    .number{
+      width:60px;
+    }
+    .number_blog{
+      width: 80px;
+    }
+    .time{
+      width: 200px;
+    }
+    /*设置表格中P标签的属性，为了防止字数过多而出现显示问题，要在p中设置宽度*/
+    table,tr,td,p{
+      margin: 0px 0 0px 0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    table,tr,td{
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+
+<!--导航-->
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid bg-info">
+    <div class="navbar-header col-sm-4">
+      <a class="navbar-brand" href="#" onclick="location.href = 'homepage.html'">个人博客</a>
+    </div>
+    <div class="col-sm-6">
+      <form class="navbar-form navbar-left" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search">
+        </div>
+        <button type="submit" class="btn btn-default">搜索</button>
+      </form>
+    </div>
+    <div class="col-sm-2">
+      <form class="navbar-form navbar-left">
+        <button type="button" class="btn btn-default" id="login" data-toggle="modal" data-target="#myModal">登录</button>
+        <button type="button" class="btn btn-default" id="register" data-toggle="modal" data-target="#Modal">注册</button>
+        <img id="picture" src="" class="img-circle" width="40px" height="40px">
+      </form>
+    </div>
+  </div>
+</nav>
+
+
+<!--bootstrap中的导航框架-->
+<div class="center-block" id="person_update" style="width: 1000px;height: 650px;font-size: 20px;font-family: 华文楷体;border: #2b669a 3px solid">
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">个人中心</a>
+        </div>
+        <div>
+          <ul class="nav navbar-nav nav-stacked">
+            <li><a href="#" id="myBlog">我的博客</a></li>
+            <li><a href="#" id="blog">发布博客</a></li>
+            <li><a href="#" id="information">个人信息</a></li>
+            <li><a href="#" id="head">修改头像</a></li>
+            <li><a href="#" id="update">修改密码</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!--我的博客-->
+  <div id="blog_my">
+    <div style="width: 1000px;height: 250px">
+      <img src="" id="blog_my_picture" style="width: 200px;height: 200px;border: #1E88C7 3px solid;float: left;margin: 0 0 0 30px">
+      <div style="width: 200px;margin: 0 0 0 30px;float: left;text-align: center">
+        <h2 id="blog_my_name"></h2><br>
+        <h4 id="blog_my_account"></h4>
+        <h4 id="blog_my_sex"></h4>
+        <h4 id="blog_my_birthday"></h4>
+      </div>
+    </div>
+    <table style="width: 940px;height: 250px;margin: 0px 27px 0 27px;" border="1">
+      <tr class="tr_height">
+        <td class="number">序号</td>
+        <td class="number_blog">编号</td>
+        <td class="title">博客标题</td>
+        <td class="time">修改时间</td>
+        <td class="type">类别</td>
+        <td class="type">标签</td>
+        <td class="type">标签</td>
+        <td class="type">标签</td>
+        <td class="use">操作</td>
+      </tr>
+      <tr class="tr_height">
+        <td><p class="number" id="one_number"></p></td>
+        <td><p class="number_blog" id="one_number_blog"></p></td>
+        <td><p class="title" id="one_title"></p></td>
+        <td><p class="time" id="one_time"></p></td>
+        <td><p class="type" id="one_category"></p></td>
+        <td><p class="type" id="one_one_type"></p></td>
+        <td><p class="type" id="one_two_type"></p></td>
+        <td><p class="type" id="one_three_type"></p></td>
+        <td><p class="use">
+          <button type="button" id="one_one" class="btn btn-default btn-xs">
+            查看
+          </button>
+          <button type="button" id="one_two" class="btn btn-default btn-xs">
+            编辑
+          </button>
+          <button type="button" id="one_three" class="btn btn-default btn-xs">
+            删除
+          </button>
+        </p></td>
+      </tr>
+      <tr class="tr_height">
+        <td><p class="number" id="two_number"></p></td>
+        <td><p class="number_blog" id="two_number_blog"></p></td>
+        <td><p class="title" id="two_title"></p></td>
+        <td><p class="time" id="two_time"></p></td>
+        <td><p class="type" id="two_category"></p></td>
+        <td><p class="type" id="two_one_type"></p></td>
+        <td><p class="type" id="two_two_type"></p></td>
+        <td><p class="type" id="two_three_type"></p></td>
+        <td><p class="use">
+          <button type="button" id="two_one" class="btn btn-default btn-xs">
+            查看
+          </button>
+          <button type="button" id="two_two" class="btn btn-default btn-xs">
+            编辑
+          </button>
+          <button type="button" id="two_three" class="btn btn-default btn-xs">
+            删除
+          </button>
+        </p></td>
+      </tr>
+      <tr class="tr_height">
+        <td><p class="number" id="three_number"></p></td>
+        <td><p class="number_blog" id="three_number_blog"></p></td>
+        <td><p class="title" id="three_title"></p></td>
+        <td><p class="time" id="three_time"></p></td>
+        <td><p class="type" id="three_category"></p></td>
+        <td><p class="type" id="three_one_type"></p></td>
+        <td><p class="type" id="three_two_type"></p></td>
+        <td><p class="type" id="three_three_type"></p></td>
+        <td><p class="use">
+          <button type="button" id="three_one" class="btn btn-default btn-xs">
+            查看
+          </button>
+          <button type="button" id="three_two" class="btn btn-default btn-xs">
+            编辑
+          </button>
+          <button type="button" id="three_three" class="btn btn-default btn-xs">
+            删除
+          </button>
+        </p></td>
+      </tr>
+    </table>
+    <div style="text-align: center">
+      <button type="button" id="previous" class="btn btn-default button_distance" style="margin: 20px 5px 0 0">
+        上一页
+      </button>
+      <button type="button" id="next" class="btn btn-default button_distance" style="margin: 20px 0 0 5px">
+        下一页
+      </button>
+    </div>
+  </div>
+    <!--发布博客-->
+    <div id="blog_manage" style="width: 800px;margin: 0px 100px;">
+      <form id="create_blog" >
+        <div class="form-group">
+          <label for="title" class="modal_label control-label" style="margin: 0 50px 0 0">标题</label>
+          <input type="text" name="name" class="form-control modal_input" id="title" placeholder="name" style="width: 550px;">
+          <span id = "title_name_error" class="error"></span>
+        </div>
+        <div class="form-group">
+          <label for="novel" class="modal_label control-label" style="margin: 0 50px 0 0">内容</label>
+          <textarea id="novel" name="novel" class="form-control modal_input" style="width: 550px;height: 300px;">
+          </textarea>
+          <span id = "novel_error" class="error"></span>
+        </div>
+        <div class="form-group">
+          <label for="game" class="modal_label control-label" style="margin: 0 50px 0 0">类别</label>
+          <input type="radio" id="game" name="type" value="游戏" checked> 游戏
+          <input type="radio" id="sport" name="type" value="运动" > 运动
+          <input type="radio" id="science" name="type" value="科技" > 科技
+          <input type="radio" id="free" name="type" value="休闲" > 休闲
+          <input type="radio" id="life" name="type" value="生活" > 生活
+        </div>
+        <div class="form-group">
+          <label for="label_one" class="modal_label control-label" style="margin: 0 50px 0 0">标签</label>
+          <input type="text" name="labelOne" class="form-control modal_input" id="label_one" placeholder="标签" style="width: 100px">
+          <input type="text" name="labelTwo" class="form-control modal_input" id="label_two" placeholder="标签" style="width: 100px">
+          <input type="text" name="labelThree" class="form-control modal_input" id="label_three" placeholder="标签" style="width: 100px">
+          <span id = "label_error" class="error"></span>
+        </div>
+        <div class="button_place">
+          <button type="reset" id="reset" class="btn btn-default button_distance" style="float: right;margin: 20px 150px 0 0">
+            清空
+          </button>
+          <button type="button" id="return" class="btn btn-default button_distance" style="float: right;margin: 20px 150px 0 0">
+            返回
+          </button>
+          <button type="button" class="btn btn-default button_distance" id="blog_update_submit" style="float: right;margin: 20px 25px 0 0">
+            完成
+          </button>
+          <button type="button" class="btn btn-default button_distance" id="blog_submit" style="float: right;margin: 20px 25px 0 0">
+            发布
+          </button>
+        </div>
+      </form>
+    </div>
+
+
+    <!--更新用户信息-->
+    <div id="person_information" style="width: 800px;margin: 0px 150px;">
+      <form id="person-form">
+        <div class="form-group">
+          <label for="person_name" class="modal_label control-label" style="margin: 0 36px 0 30px">用户名</label>
+          <input type="text" name="name" class="form-control modal_input" id="person_name" placeholder="name" style="width: 60%">
+          <span id = "person_name_error" class="error"></span>
+        </div>
+        <div class="form-group">
+          <label for="person_account" class="modal_label control-label" style="margin: 0 57px 0 30px">账号</label>
+          <input type="text" name="account" class="form-control modal_input" id="person_account" placeholder="account" style="width: 60%" readonly>
+          <span id = "person_account_error" class="error"></span>
+        </div>
+        <div class="form-group">
+          <label for="person_birthday" class="modal_label control-label" style="margin: 0 15px 0 30px">出生日期</label>
+          <input type="date" name="birthday" class="form-control modal_input" id="person_birthday" placeholder="年/月/日" style="width: 60%">
+          <span id = "person_birthday_error" class="error"></span>
+        </div>
+        <div class="form-group">
+          <label for="person_sex_man" class="modal_label control-label" style="margin: 0 57px 0 30px">性别</label>
+          <input type="radio" id="person_sex_man" name="sex" value="男" checked> 男
+          <input type="radio" id="person_sex_woman" name="sex" value="女"> 女
+        </div>
+        <div class="button_place">
+          <button type="button" class="btn btn-default button_distance" id="person_submit" style="float: right;margin: 0 190px 0 0">
+            保存
+          </button>
+        </div>
+        <div class="button_place">
+          <button type="button" class="btn btn-default button_distance" id="close" style="float: left;width:200px;margin: 100px 0 0 240px" onclick="location.href='homepage.html'">
+            退出登录
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!--更换头像-->
+    <div id="head_picture" style="width: 800px;margin: 0 100px;border: #2b669a 3px solid">
+      <img src="" id="person_picture" style="float: left;width: 200px;height: 200px;margin: 70px 300px 100px 300px;border: 3px #1b6d85 solid">
+      <!--下面是文件选择框样式是复制别人的代码，出处在该网页的css代码那里有标识-->
+      <form enctype="multipart/form-data" style="text-align: center;">
+        <a class="file">
+          <input type="file" name="" onchange="upfile.value=this.value" class="upfile" id="file">
+          <input value="未选择任何文件" type="button" name="upfile" id="upfile">
+        </a>
+        <br>
+        <button type="button" class="btn btn-default button_distance" id="picture_submit">
+          更换
+        </button>
+      </form>
+    </div>
+
+    <!--更换密码-->
+    <div id="update_password" style="width: 800px;margin: 0px 150px;">
+      <form id="person_confirm_password">
+        <div class="form-group">
+          <label for="start_password" class="modal_label control-label" style="margin: 0 43px 0 30px">原密码</label>
+          <input type="password" name="startPassword" class="form-control modal_input" id="start_password" placeholder="原密码" style="width: 60%">
+          <span id = "start_password_error" class="error"></span>
+        </div>
+        <div class="form-group">
+          <label for="end_password" class="modal_label control-label" style="margin: 0 22px 0 30px">修改密码</label>
+          <input type="password" name="endPassword" class="form-control modal_input" id="end_password" placeholder="修改后的密码" style="width: 60%">
+          <span id = "end_password_error" class="error"></span>
+        </div>
+        <div class="form-group">
+          <label for="confirm_password" class="modal_label control-label" style="margin: 0 22px 0 30px">确认密码</label>
+          <input type="password" name="password" class="form-control modal_input" id="confirm_password" placeholder="确认密码" style="width: 60%">
+          <span id = "confirm_password_error" class="error"></span>
+        </div>
+        <button type="button" class="btn btn-default button_distance" id="end_password_submit" style="float: right;margin: 0 180px 0 0">
+          修改
+        </button>
+      </form>
+    </div>
+</div>
+</body>
+</html>

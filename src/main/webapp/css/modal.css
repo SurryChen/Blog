@@ -1,0 +1,17 @@
+/*使输入框与文本在同一行上对齐*/
+.modal_input{
+    vertical-align: middle;
+    display: inline;
+}
+.modal_label{
+    vertical-align: middle;
+    display: inline;
+}
+/*删除modal插件的脚部，扩大按钮所在的位置*/
+.button_place{
+    height: 40px;
+}
+/*按钮之间的距离*/
+.button_distance{
+    margin: 0px 0px 0px 10px;
+}

@@ -1,0 +1,27 @@
+#body{
+    width: 1200px;
+    height: 650px;
+    border: 5px #0f0f0f solid;
+}
+#header{
+    width: 100%;
+    height: 10%;
+    border: 3px #2aabd2 solid;
+}
+#midden{
+    width: 100%;
+    height: 80%;
+    border: 3px #1b6d85 solid;
+}
+#footer{
+    width:100%;
+    height: 10%;
+    border: 3px #b2dba1 solid;
+}
+.topic{
+    font-family:华文楷体;
+    line-height: 45px;
+}
+#center{
+    border: 5px #0f0f0f solid;
+}

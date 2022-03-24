@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>哇哇博客</title>
+    <link rel="stylesheet" href="../bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/modal.css">
+    <link rel="stylesheet" href="../css/page.css">
+    <script src="../bootstrap-3.3.7-dist/js/jquery-3.2.1.min.js"></script>
+    <script src="../bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <script src="../js/register_login.js"></script>
+    <script src="../js/page_information.js"></script>
+    <script>
+        window.onload=function(){
+
+
+            /*
+             加载分页，默认加载第一页
+            */
+            page(1);
+            /*
+            隐藏头像框
+            */
+            $("#picture").hide();
+            /*
+            判断是否登录的方法
+            */
+            function confirmLogin () {
+                $.post("http://localhost/checkLoginServlet", "", function (data) {
+                    if (data.account != "0") {
+                        $("#register").hide();
+                        $("#login").hide();
+                        document.getElementById("picture").src = data.avatar;
+                        $("#picture").show();
+                    }
+                },'json');
+            }
+            /*
+            执行判断是否登录的方法
+            */
+            confirmLogin();
+            /*
+             注册按钮绑定事件
+             要求：1、有校验过表单各项数据是否合理
+                   2、注册成功有弹窗提醒，然后点击确认后弹出登录框
+            */
+            document.getElementById("register_submit").onclick = function (){
+                var name_result = name_test();
+                var account_result = account_test();
+                var password_result = password_test();
+                var confirm_result = confirm_test();
+                var birthday_result = birthday_test();
+                if(name_result && account_result && password_result && confirm_result && birthday_result){
+                    $.post("http://localhost/registerServlet",$("#register-form").serialize(),function (data){
+                        var flag = data.flag;
+                        if(flag == "1") {
+                            document.getElementById("name_error").innerHTML = "已被占用！";
+                        } else if(flag == "2") {
+                            document.getElementById("account_register_error").innerHTML = "已被占用！";
+                        } else if(flag == "3") {
+                            document.getElementById("name_error").innerHTML = "已被占用！";
+                            document.getElementById("account_register_error").innerHTML = "已被占用！";
+                        } else if(flag == "4") {
+                            alert("注册成功！");
+                            $('#Modal').modal('hide');
+                            $("#myModal").modal('show');
+                        }
+                    },'json');
+                }
+            };
+            /*
+            注册按钮绑定事件
+                要求：1、有校验过表单各项数据是否合理
+                     2、登录成功有弹窗提醒，然后隐藏登录和注册按钮，展示头像
+                     3、在cookie登记已经登录，储存用户简单信息
+             */
+            document.getElementById("login_submit").onclick = function (){
+                var account_login_result = account_login_test();
+                var password_login_result = password_login_test();
+                if(account_login_result && password_login_result){
+                    $.post("http://localhost/loginServlet",$("#login-form").serialize(),function (data){
+
+                        if(data.flag == "1"){
+                            document.getElementById("password_login_error").innerHTML = "密码错误！";
+                        } else if(data.flag == "2"){
+                            alert("登录成功！");
+                            $('#myModal').modal('hide');
+                            $("#login").hide();
+                            $("#register").hide();
+                            confirmLogin();
+                            $("#picture").show();
+                        } else if(data.flag == "3"){
+                            document.getElementById("account_login_error").innerHTML = "该账号不存在！";
+                        }
+                    },'json');
+                }
+            };
+            /*
+            number为当前页数
+             */
+            var number = 1;
+            /*
+            换页的按钮事件
+             */
+            document.getElementById("one").onclick = function (){
+                var pageNumber = document.getElementById("one").textContent;
+                number = pageNumber;
+                page(pageNumber);
+            };
+            document.getElementById("two").onclick = function (){
+                var pageNumber = document.getElementById("two").textContent;
+                number = pageNumber;
+                page(pageNumber);
+            };
+            document.getElementById("three").onclick = function (){
+                var pageNumber = document.getElementById("three").textContent;
+                number = pageNumber;
+                page(pageNumber);
+            };
+            document.getElementById("four").onclick = function (){
+                var pageNumber = document.getElementById("four").textContent;
+                number = pageNumber;
+                page(pageNumber);
+            };
+            document.getElementById("five").onclick = function (){
+                var pageNumber = document.getElementById("five").textContent;
+                number = pageNumber;
+                page(pageNumber);
+            };
+            document.getElementById("next").onclick = function () {
+                number = parseInt(number) + 1;
+                page(number);
+            };
+            document.getElementById("previous").onclick = function () {
+                number = parseInt(number) - 1;
+                page(number);
+            };
+            /*
+            处理重置后错误信息提示没有被清除效果
+             */
+            document.getElementById("login_clear").onclick = function(){
+                document.getElementById("account_login_error").innerHTML = "";
+                document.getElementById("password_login_error").innerHTML = "";
+            };
+            document.getElementById("register_clear").onclick = function(){
+                document.getElementById("name_error").innerHTML = "";
+                document.getElementById("account_register_error").innerHTML = "";
+                document.getElementById("password_register_error").innerHTML = "";
+                document.getElementById("confirm_error").innerHTML = "";
+                document.getElementById("birthday_error").innerHTML = "";
+            };
+            /*
+            表格每一行代表的文章编号
+            */
+            var numberBlogOne;
+            var numberBlogTwo;
+            var numberBlogThree;
+            var numberBlogFour;
+            var numberBlogFive;
+            /*
+            点击打开文章查看
+             */
+            document.getElementById("tr_one").onclick = function () {
+                var url = "blog.html?numberBlog="+numberBlogOne;
+                location.href = url;
+            }
+            document.getElementById("tr_two").onclick = function () {
+                var url = "blog.html?numberBlog="+numberBlogTwo;
+                location.href = url;
+            }
+            document.getElementById("tr_three").onclick = function () {
+                var url = "blog.html?numberBlog="+numberBlogThree;
+                location.href = url;
+            }
+            document.getElementById("tr_four").onclick = function () {
+                var url = "blog.html?numberBlog="+numberBlogFour;
+                location.href = url;
+            }
+            document.getElementById("tr_five").onclick = function () {
+                var url = "blog.html?numberBlog="+numberBlogFive;
+                location.href = url;
+            }
+            // 用来记录上次的总页数，用来处理已经达到最大页数还在按下一页的问题
+            var pageNumberTwo;
+            function page(page){
+                if(parseInt(page) < 1){
+                    page = 1;
+                    number = page;
+                    return false;
+                }
+                var order;
+                // 标记是否要退出
+                $.post("http://localhost/pageServlet",{page:page},function (data){
+                    if(data[0].number == "0"){
+                        // 上下页达到最大页数，页面页数不再增加
+                        if(parseInt(page)>parseInt(pageNumberTwo)) {
+                            page = parseInt(pageNumberTwo);
+                            number = page;
+                            return false;
+                        }
+                    }
+                    // 总信息数
+                    var numberTwo = data[0].number;
+                    // 总页数
+                    var pageNumber;
+                    if(numberTwo%5 == 0){
+                        pageNumber = numberTwo/5;
+                    } else {
+                        numberTwo = numberTwo - (numberTwo%5);
+                        pageNumber = numberTwo/5+1;
+                    }
+                    pageNumberTwo = pageNumber;
+                    // 根据数字变化来设置如何导入信息到页面
+                    // 分页条显示规则
+                    if(pageNumber>5){
+                        if(pageNumber-page<=2){
+                            var pageTwo = parseInt(pageNumber) - 4;
+                            var pageThree = parseInt(pageNumber) - 3;
+                            var pageFour = parseInt(pageNumber) - 2;
+                            var pageFive = parseInt(pageNumber) - 1;
+                            document.getElementById("one").innerHTML = pageTwo;
+                            document.getElementById("two").innerHTML = pageThree;
+                            document.getElementById("three").innerHTML = pageFour;
+                            document.getElementById("four").innerHTML = pageFive;
+                            document.getElementById("five").innerHTML = pageNumber;
+                        } else if (page<=3) {
+                            document.getElementById("one").innerHTML = 1;
+                            document.getElementById("two").innerHTML = 2;
+                            document.getElementById("three").innerHTML = 3;
+                            document.getElementById("four").innerHTML = 4;
+                            document.getElementById("five").innerHTML = 5;
+                        } else {
+                            var pageO = parseInt(page) - 2;
+                            var pageT = parseInt(page) - 1;
+                            var pageFo = parseInt(page) + 1;
+                            var pageFi = parseInt(page) + 2;
+                            document.getElementById("one").innerHTML = pageO;
+                            document.getElementById("two").innerHTML = pageT;
+                            document.getElementById("three").innerHTML = page;
+                            document.getElementById("four").innerHTML = pageFo;
+                            document.getElementById("five").innerHTML = pageFi;
+                        }
+                    } else {
+                        if(pageNumber < 5){
+                            $("#five").hide();
+                            if(pageNumber < 4){
+                                $("#four").hide();
+                                if(pageNumber < 3){
+                                    $("#three").hide();
+                                    if(pageNumber < 2){
+                                        $("#two").hide();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // 标记表格中每一行的文章编号
+                    var flag;
+                    if (data[0].number-(page-1)*5 >= 5){
+                        flag = 5;
+                        numberBlogOne=data[0].novelNumber;
+                        numberBlogTwo=data[1].novelNumber;
+                        numberBlogThree=data[2].novelNumber;
+                        numberBlogFour=data[3].novelNumber;
+                        numberBlogFive=data[4].novelNumber;
+                    } else {
+                        flag = data[0].number-(page-1)*5;
+                        // 保存博客编号
+                        if(flag>=1){
+                            numberBlogOne=data[0].novelNumber;
+                            if(flag>=2){
+                                numberBlogTwo=data[1].novelNumber;
+                                if(flag>=3){
+                                    numberBlogThree=data[2].novelNumber;
+                                    if(flag>=4){
+                                        numberBlogFour=data[3].novelNumber;
+                                        if(flag>=5){
+                                            numberBlogFive=data[4].novelNumber;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // 后面还需要flag，所以替换
+                        var flagTwo = flag;
+                        // 从flag开始清空，用于判断要展示多少篇文章
+                        var orderTwo;
+                        for(flagTwo;flagTwo<5;flagTwo++){
+                            switch (flagTwo) {
+                                case 0:
+                                    orderTwo = "one";
+                                    break;
+                                case 1:
+                                    orderTwo = "two";
+                                    break;
+                                case 2:
+                                    orderTwo = "three";
+                                    break;
+                                case 3:
+                                    orderTwo = "four";
+                                    break;
+                                case 4:
+                                    orderTwo = "five";
+                                    break;
+                            }
+                            $("#tr_"+orderTwo).hide();
+                        }
+                    }
+                    // 开始写入数据
+                    for(var i=0;i<flag;i++){
+                        switch (i) {
+                            case 0:
+                                order = "one";
+                                break;
+                            case 1:
+                                order = "two";
+                                break;
+                            case 2:
+                                order = "three";
+                                break;
+                            case 3:
+                                order = "four";
+                                break;
+                            case 4:
+                                order = "five";
+                                break;
+                        }
+                        document.getElementById(order+"_novel_author").innerHTML = data[i].novelAuthor;
+                        document.getElementById(order+"_novel_name").innerHTML = data[i].novelName;
+                        document.getElementById(order+"_novel_time").innerHTML = data[i].novelPublishTime.substring(0, 19);
+                        document.getElementById(order+"_one_button").innerHTML = data[i].novelLabelFirst;
+                        document.getElementById(order+"_two_button").innerHTML = data[i].novelLabelSecond;
+                        document.getElementById(order+"_three_button").innerHTML = data[i].novelLabelThird;
+                        $("#tr_"+order).show();
+                    }
+                },'json');
+            }
+        };
+    </script>
+    <!--不能设置在外部.css文件中，无法显示-->
+    <style>
+        .error{
+        color: red;
+        }
+        .tr_type{
+            height: 100px;
+            width: 1000px;
+        }
+    </style>
+</head>
+<body>
+
+<!--模态窗口 <div>结构来源于菜鸟教程的bootstrap中Modal插件实例 具体输入框的样式部分来自于bootstrap的表单输入框实例-->
+<!--整个页面多处用到类似的结构，不再赘述-->
+<!--菜鸟教程：https://www.runoob.com/bootstrap/bootstrap-modal-plugin.html
+    bootstrap：https://v2.bootcss.com/base-css.html#forms-->
+<!--注册窗口-->
+<div class="modal fade" id="Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="ModalLabel">
+                    哇哇博客账号注册
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="name" class="modal_label control-label" style="margin: 0 36px 0 30px">用户名</label>
+                        <input type="text" name="name" class="form-control modal_input" id="name" placeholder="name" style="width: 60%">
+                        <span id = "name_error" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="register_account" class="modal_label control-label" style="margin: 0 50px 0 30px">账号</label>
+                        <input type="text" name="account" class="form-control modal_input" id="register_account" placeholder="account" style="width: 60%">
+                        <span id = "account_register_error" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="password_register_error" class="modal_label control-label" style="margin: 0 50px 0 30px">密码</label>
+                        <input type="password" name="password" class="form-control modal_input" id="register_password" placeholder="password" style="width: 60%">
+                        <span id = "password_register_error" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm" class="modal_label control-label" style="margin: 0 22px 0 30px">确认密码</label>
+                        <input type="password" name="confirm" class="form-control modal_input" id="confirm" placeholder="confirm" style="width: 60%">
+                        <span id = "confirm_error" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="birthday" class="modal_label control-label" style="margin: 0 22px 0 30px">出生日期</label>
+                        <input type="date" name="birthday" class="form-control modal_input" id="birthday" placeholder="年/月/日" style="width: 60%">
+                        <span id = "birthday_error" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="sex" class="modal_label control-label" style="margin: 0 50px 0 30px">性别</label>
+                        <input type="radio" id="sex" name="sex" value="男" checked> 男
+                        <input type="radio" name="sex" value="女"> 女
+                    </div>
+                    <div class="button_place">
+                        <button type="reset" class="btn btn-default button_distance" id="register_clear" style="float: right">
+                            重置
+                        </button>
+                        <button type="button" class="btn btn-default button_distance" id="register_submit" style="float: right">
+                            注册
+                        </button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<!--登录窗口-->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="MyModalLabel">
+                    哇哇博客账号登录
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="account_login_error" class="modal_label control-label" style="margin: 0 50px 0 30px">账号</label>
+                        <input type="text" name="account" class="form-control modal_input" id="login_account" placeholder="account" style="width: 60%">
+                        <span id = "account_login_error" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="password_login_error" class="modal_label control-label" style="margin: 0 50px 0 30px">密码</label>
+                        <input type="password" name="password" class="form-control modal_input" id="login_password" placeholder="password" style="width: 60%">
+                        <span id = "password_login_error" class="error"></span>
+                    </div>
+                    <div class="button_place">
+                        <button type="reset" class="btn btn-default button_distance" id="login_clear" style="float: right">
+                            重置
+                        </button>
+                        <button type="button" class="btn btn-default button_distance" id="login_submit" style="float: right">
+                            登录
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+<!--首页页面-->
+<div id="homepage">
+    <!--导航-->
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid bg-info">
+            <div class="navbar-header col-sm-4">
+                <a class="navbar-brand" href="#">个人博客</a>
+            </div>
+            <div class="col-sm-6">
+                <form class="navbar-form navbar-left" role="search">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                </form>
+            </div>
+            <div class="col-sm-2">
+                <form class="navbar-form navbar-left">
+                    <button type="button" class="btn btn-default" id="login" data-toggle="modal" data-target="#myModal">登录</button>
+                    <button type="button" class="btn btn-default" id="register" data-toggle="modal" data-target="#Modal">注册</button>
+                    <a href="personInformation.html"><img id="picture" src="" class="img-circle" width="40px" height="40px"></a>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div id="body" class="center-block"> <!--shadow-sm p-3 mb-5 bg-white rounded-->
+        <div id="header">
+            <h2 class="topic" style="float: left;margin: 10px 0px 10px 300px;">博客</h2>
+            <h2 class="topic" style="float: right;margin: 10px 145px 10px 0px;">作者</h2>
+        </div>
+        <div id="midden">
+            <table class="table table-hover" style="width: 1000px;margin: 0 100px;text-align: center;font-family: 华文楷体;font-size: 20px">
+                <tr class="tr_type" id="tr_one">
+                    <td>
+                        <p id="one_novel_name"></p>
+                        <p id="one_novel_time"></p>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-xs" id="one_one_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="one_two_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="one_three_button"></button>
+                    </td>
+                    <td>
+                        <p id="one_novel_author"></p>
+                    </td>
+                </tr>
+                <tr class="tr_type" id="tr_two">
+                    <td>
+                        <p id="two_novel_name"></p>
+                        <p id="two_novel_time"></p>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-xs" id="two_one_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="two_two_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="two_three_button"></button>
+                    </td>
+                    <td>
+                        <p id="two_novel_author"></p>
+                    </td>
+                </tr>
+                <tr class="tr_type" id="tr_three">
+                    <td>
+                        <p id="three_novel_name"></p>
+                        <p id="three_novel_time"></p>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-xs" id="three_one_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="three_two_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="three_three_button"></button>
+                    </td>
+                    <td>
+                        <p id="three_novel_author"></p>
+                    </td>
+                </tr>
+                <tr class="tr_type" id="tr_four">
+                    <td>
+                        <p id="four_novel_name"></p>
+                        <p id="four_novel_time"></p>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-xs" id="four_one_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="four_two_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="four_three_button"></button>
+                    </td>
+                    <td>
+                        <p id="four_novel_author"></p>
+                    </td>
+                </tr>
+                <tr class="tr_type" id="tr_five">
+                    <td>
+                        <p id="five_novel_name"></p>
+                        <p id="five_novel_time"></p>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-xs" id="five_one_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="five_two_button"></button>
+                        <button type="button" class="btn btn-primary btn-xs" id="five_three_button"></button>
+                    </td>
+                    <td>
+                        <p id="five_novel_author"></p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="footer">
+            <ul class="pagination pagination-lg" style="display: table;margin: 5px auto;text-align: center;">
+                <button type="button" style="margin: 0 5px 0 5px" id="previous" class="btn btn-primary btn-lg ">&laquo;</button>
+                <button type="button" style="margin: 0 5px 0 5px" id="one" class="btn btn-primary btn-lg ">1</button>
+                <button type="button" style="margin: 0 5px 0 5px" id="two" class="btn btn-primary btn-lg ">2</button>
+                <button type="button" style="margin: 0 5px 0 5px" id="three" class="btn btn-primary btn-lg ">3</button>
+                <button type="button" style="margin: 0 5px 0 5px" id="four" class="btn btn-primary btn-lg ">4</button>
+                <button type="button" style="margin: 0 5px 0 5px" id="five" class="btn btn-primary btn-lg ">5</button>
+                <button type="button" style="margin: 0 5px 0 5px" id="next" class="btn btn-primary btn-lg ">&raquo;</button>
+            </ul>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
